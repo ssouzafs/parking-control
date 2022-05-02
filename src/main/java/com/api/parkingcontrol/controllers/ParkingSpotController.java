@@ -88,14 +88,9 @@ public class ParkingSpotController {
 
         if (optionalParkingSpotModel.isPresent()) {
             var parkingSpotModel = optionalParkingSpotModel.get();
-            parkingSpotModel.setLicensePlateCar(dto.getLicensePlateCar());
-            parkingSpotModel.setNumber(dto.getNumber());
-            parkingSpotModel.setModelCar(dto.getModelCar());
-            parkingSpotModel.setBrandCar(dto.getBrandCar());
-            parkingSpotModel.setColorCar(dto.getColorCar());
-            parkingSpotModel.setResponsibleName(dto.getResponsibleName());
-            parkingSpotModel.setApartment(dto.getApartment());
-            parkingSpotModel.setBlock(dto.getBlock());
+
+            // Convert data dto in model
+            BeanUtils.copyProperties(dto, parkingSpotModel);
 
             /** Verify if exists number in parking spot */
             if (this.service.existsByNumber(parkingSpotModel.getId(), parkingSpotModel.getNumber())) {
