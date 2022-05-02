@@ -4,6 +4,10 @@ import com.api.parkingcontrol.dto.ParkingSpotDto;
 import com.api.parkingcontrol.models.ParkingSpotModel;
 import com.api.parkingcontrol.services.ParkingSpotService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -58,8 +62,10 @@ public class ParkingSpotController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ParkingSpotModel>> getParkingSpotModelList() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.service.findAll());
+    public ResponseEntity<Page<ParkingSpotModel>> getParkingSpotModelList(@PageableDefault(page = 0, size = 10,
+            sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.service.findAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -89,7 +95,7 @@ public class ParkingSpotController {
         if (optionalParkingSpotModel.isPresent()) {
             var parkingSpotModel = optionalParkingSpotModel.get();
 
-            // Convert data dto in model
+//            Convert data dto in model
             BeanUtils.copyProperties(dto, parkingSpotModel);
 
             /** Verify if exists number in parking spot */

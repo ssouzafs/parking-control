@@ -2,6 +2,8 @@ package com.api.parkingcontrol.services;
 
 import com.api.parkingcontrol.models.ParkingSpotModel;
 import com.api.parkingcontrol.repositories.IParkingSpotRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -30,6 +32,7 @@ public class ParkingSpotService {
 
     /**
      * Verify if exists license Plates Car
+     *
      * @param licensePlateCar
      * @return
      */
@@ -39,6 +42,7 @@ public class ParkingSpotService {
 
     /**
      * check if the license plate already exists in other records, based on the id informed.
+     *
      * @param id
      * @param licensePlateCar
      * @return
@@ -53,6 +57,7 @@ public class ParkingSpotService {
 
     /**
      * check if the number already exists in other records, based on the id informed.
+     *
      * @param id
      * @param number
      * @return
@@ -67,6 +72,7 @@ public class ParkingSpotService {
 
     /**
      * check if the apartment and block already exists in other records, based on the id informed.
+     *
      * @param id
      * @param apartment
      * @param block
@@ -76,8 +82,8 @@ public class ParkingSpotService {
         return this.parkingSpotRepository.countByApartmentAndBlock(id, apartment, block) > 0;
     }
 
-    public List<ParkingSpotModel> findAll() {
-        return this.parkingSpotRepository.findAll();
+    public Page<ParkingSpotModel> findAll(Pageable pageable) {
+        return this.parkingSpotRepository.findAll(pageable);
     }
 
     public Optional<ParkingSpotModel> findById(UUID id) {
