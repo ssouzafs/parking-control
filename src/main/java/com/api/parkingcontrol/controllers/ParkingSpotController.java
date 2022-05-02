@@ -20,33 +20,33 @@ import java.util.UUID;
 @RequestMapping("/parking-spot")
 public class ParkingSpotController {
 
-    final ParkingSpotService parkingSpotService;
+    final ParkingSpotService service;
 
     /**
      * Constructor with dependency inject service
      *
-     * @param parkingSpotService
+     * @param service
      */
-    public ParkingSpotController(ParkingSpotService parkingSpotService) {
-        this.parkingSpotService = parkingSpotService;
+    public ParkingSpotController(ParkingSpotService service) {
+        this.service = service;
     }
 
     @PostMapping
     public ResponseEntity<Object> saveParkingSpot(@RequestBody @Valid ParkingSpotDto dto) {
 
         /** Verify if exists number in parking spot */
-        if (this.parkingSpotService.existsByNumber(dto.getNumber())) {
+        if (this.service.existsByNumber(dto.getNumber())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Parking Spot is Already in Use!");
         }
 
         /** Verify if exists license plate */
-        if (this.parkingSpotService.existsByLicensePlateCar(dto.getLicensePlateCar())) {
+        if (this.service.existsByLicensePlateCar(dto.getLicensePlateCar())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: License Plate Car is Already in Parking Spot!");
         }
 
         /** Verify if exists apartment and block registered */
-        if (this.parkingSpotService.existsByApartmentAndBlock(dto.getApartment(), dto.getBlock())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Apartment and Block is Already in Parking Spot!!");
+        if (this.service.existsByApartmentAndBlock(dto.getApartment(), dto.getBlock())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Apartment of this block is already in use!!");
         }
 
         var model = new ParkingSpotModel();
@@ -54,28 +54,29 @@ public class ParkingSpotController {
         BeanUtils.copyProperties(dto, model);
         model.setRegistrationDate(LocalDateTime.now(ZoneId.of("UTC")));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.parkingSpotService.save(model));
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.service.save(model));
     }
 
     @GetMapping
     public ResponseEntity<List<ParkingSpotModel>> getParkingSpotModelList() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.parkingSpotService.findAll());
+        return ResponseEntity.status(HttpStatus.OK).body(this.service.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> getParkingSpot(@PathVariable(value = "id") UUID id) {
-        Optional<ParkingSpotModel> optionalParkingSpotModel = this.parkingSpotService.findById(id);
+        Optional<ParkingSpotModel> optionalParkingSpotModel = this.service.findById(id);
         if (optionalParkingSpotModel.isPresent()) {
             return ResponseEntity.status(HttpStatus.OK).body(optionalParkingSpotModel.get());
         }
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot Not Found!");
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteParkingSpot(@PathVariable(value = "id") UUID id) {
-        Optional<ParkingSpotModel> optionalParkingSpotModel = this.parkingSpotService.findById(id);
+        Optional<ParkingSpotModel> optionalParkingSpotModel = this.service.findById(id);
         if (optionalParkingSpotModel.isPresent()) {
-            this.parkingSpotService.delete(optionalParkingSpotModel.get());
+            this.service.delete(optionalParkingSpotModel.get());
             return ResponseEntity.status(HttpStatus.OK).body("Parking Spot deleted successfully!");
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot Not Found!");
@@ -83,7 +84,8 @@ public class ParkingSpotController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateParkingSpot(@PathVariable(value = "id") UUID id, @RequestBody @Valid ParkingSpotDto dto) {
-        Optional<ParkingSpotModel> optionalParkingSpotModel = this.parkingSpotService.findById(id);
+        Optional<ParkingSpotModel> optionalParkingSpotModel = this.service.findById(id);
+
         if (optionalParkingSpotModel.isPresent()) {
             var parkingSpotModel = optionalParkingSpotModel.get();
             parkingSpotModel.setLicensePlateCar(dto.getLicensePlateCar());
@@ -95,7 +97,23 @@ public class ParkingSpotController {
             parkingSpotModel.setApartment(dto.getApartment());
             parkingSpotModel.setBlock(dto.getBlock());
 
-            return ResponseEntity.status(HttpStatus.OK).body(this.parkingSpotService.save(parkingSpotModel));
+            /** Verify if exists number in parking spot */
+            if (this.service.existsByNumber(parkingSpotModel.getId(), parkingSpotModel.getNumber())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Parking Spot is Already in Use!");
+            }
+
+            /** Verify if exists license plate */
+            if (this.service.existsByLicensePlateCar(parkingSpotModel.getId(), parkingSpotModel.getLicensePlateCar())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: License Plate Car is Already in Parking Spot!");
+            }
+
+            /** Verify if exists apartment and block registered */
+            if (this.service.existsByApartmentAndBlock(parkingSpotModel.getId(), parkingSpotModel.getApartment(), parkingSpotModel.getBlock())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Apartment of this block is already in use!!");
+            }
+
+            /** Save if verification is ok */
+            return ResponseEntity.status(HttpStatus.OK).body(this.service.save(parkingSpotModel));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot Not Found!");
     }
